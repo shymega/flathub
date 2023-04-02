@@ -1,0 +1,79 @@
+app-id: io.github.input_leap.input-leap
+runtime: org.kde.Platform
+runtime-version: 5.15-22.08
+sdk: org.kde.Sdk
+command: input-leap
+rename-icon: input-leap
+rename-desktop-file: input-leap.desktop
+finish-args:
+  - --share=ipc
+  - --socket=x11
+  - --share=network
+  - --own-name=org.kde.*
+  - --talk-name=org.a11y.*
+  - --talk-name=org.kde.StatusNotifierWatcher
+  - --system-talk-name=org.freedesktop.Avahi
+  - --device=dri
+cleanup:
+  - /include
+  - /lib/pkgconfig
+  - /share/man
+  - '*.la'
+  - '*.a'
+modules:
+  - shared-modules/intltool/intltool-0.51.json
+  - name: openssl
+    buildsystem: simple
+    build-commands:
+      - ./config --prefix=/app
+      - make
+      - make install
+    sources:
+      - type: archive
+        url: https://github.com/openssl/openssl/archive/OpenSSL_1_1_1n.tar.gz
+        sha256: 6b2d2440ced8c802aaa61475919f0870ec556694c466ebea460e35ea2b14839e
+    cleanup:
+      - /share/doc
+      - /share/man
+  - name: libevent
+    config-opts:
+      - --disable-doxygen-doc
+    sources:
+      - type: archive
+        url: https://github.com/libevent/libevent/releases/download/release-2.1.12-stable/libevent-2.1.12-stable.tar.gz
+        sha256: 92e6de1be9ec176428fd2367677e61ceffc2ee1cb119035037a27d346b0403bb
+  - name: avahi
+    config-opts:
+      - --disable-libdaemon
+      - --enable-compat-libdns_sd
+      - --disable-python
+      - --disable-doxygen-doc
+      - --with-distro=none
+      - --disable-glib
+      - --disable-gobject
+      - --disable-introspection
+      - --disable-gtk
+      - --disable-gtk3
+      - --disable-qt3
+      - --disable-qt4
+      - --disable-mono
+      - --disable-monodoc
+      - --disable-manpages
+      - --disable-xmltoman
+      - --disable-utils
+    cleanup:
+      - /bin
+    sources:
+      - type: archive
+        url: https://github.com/lathiat/avahi/releases/download/v0.8/avahi-0.8.tar.gz
+        sha256: 060309d7a333d38d951bc27598c677af1796934dbd98e1024e7ad8de798fedda
+  - name: input-leap
+    buildsystem: cmake-ninja
+    sources:
+      - type: git
+        url: https://github.com/input-leap/input-leap.git
+        commit: ad3c0e32672cc1916173ac5539bf80104d12c9f8
+      - type: file
+        path: io.github.input_leap.input-leap.appdata.xml
+    post-install:
+      - install -Dm644 io.github.input_leap.input-leap.appdata.xml /app/share/metainfo/io.github.input_leap.input-leap.appdata.xml
